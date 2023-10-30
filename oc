@@ -9,14 +9,13 @@ Question 1: Manage Identity providers
   - create user susan with susan123
   - Identity provider name should be users.
 
-
 # yum install httpd-tools -y
 
 # htpasswd -c -B -b openshift-user admin redhat
 # htpasswd -B -b openshift-user developer developer
 # htpasswd -B -b openshift-user testing redhat
 
-# oc create secret generic localusers --from-file htpasswd=users-list -n openshift-config
+# oc create secret generic super-secret --from-file htpasswd=userlist-file -n openshift-config
 
 # oc get oauth cluster -o yaml > oauth.yaml
 
@@ -51,9 +50,7 @@ Question 2: Manage cluster project and Permission
 # oc new-project apollo demo
 
 # oc adm policy add-cluster-role-to-user cluster-admin bob
-
 # oc adm policy add-cluster-role-to-user  self-provisioner john
-
 # oc adm policy remove-cluster-role-from-group self-provisioner system:authenticated:oauth (first check if user is not able to create project then run this command otherwise its not required) 
 
 Not this not require - (oc delete clusterrolebinding self-provisoners) -- ming the 's'
@@ -66,7 +63,6 @@ Not this not require - (oc delete clusterrolebinding self-provisoners) -- ming t
 
 
 Question 3: Managing group
-
     - Create a groups with named site-users and guest-users
     - add qwerty user in guest-user group
     - add harry and susan users in site-users
@@ -82,7 +78,6 @@ Question 3: Managing group
 
 # oc adm policy add-role-to-group edit site-user -n test
 # oc adm policy add-role-to-group view guest-user -n dump
-
 
 Question 4: Create resource quota for project rocky:
   - pods = 3
@@ -129,7 +124,6 @@ spec:
 
 # oc create -f limitrance.yml -n rocky
 # oc describe limitrange -n rocky
-
 
 Question 6: Scale application manually
   - scale the single-pod replics to 6 under the project world and make sure all pods should run sucessfully. 
@@ -216,7 +210,7 @@ Question 13: Deploy application in the project project2
   - There is one pod already running and,
   - Application should produce output
 
-We have make workder nodes to untaint
+We have make worker nodes to untaint
 
 # oc get pods
 # oc describe pod podname
@@ -240,8 +234,6 @@ Question 14: Deploy application in the project project3
 # oc describe pods pod-name
 Get the selector name from describe details
 
-# oc label node master01 disk=ssd  
-
 ---
 # oc get events --> 0/6 nodes available, NodeSelector not matched:
 # oc get node -L app
@@ -260,11 +252,9 @@ Question 15: Deploy application in the project project4
 # oc describe pods podname
 
 Check the error there should be insufficient memory
-
 # oc edit deploy deploymentname 
 
 remove the complete resource section and save.
-
 spec:
   container:
   - image
