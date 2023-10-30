@@ -1,0 +1,275 @@
+
+Question 1: Manage Identity providers
+
+  - create user bob with password indionce
+  - create user qwerty with passwod catalog
+  - create user john with password jonh123
+  - create user natasha with password natasha123
+  - create user harry with password harry123
+  - create user susan with susan123
+  - Identity provider name should be users.
+
+
+# yum install httpd-tools -y
+
+# htpasswd -c -B -b openshift-user admin redhat
+# htpasswd -B -b openshift-user developer developer
+# htpasswd -B -b openshift-user testing redhat
+
+# oc create secret generic localusers --from-file htpasswd=users-list -n openshift-config
+
+# oc get oauth cluster -o yaml > oauth.yaml
+
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - htpasswd:
+      fileData:
+        name: super-secret
+    mappingMethod: claim
+    name: ex280-provider
+    type: HTPasswd  
+
+# oc replace -f oauth.yaml
+
+verify login to newly created users.
+
+Question 2: Manage cluster project and Permission
+
+  - Create project with named apollo, test, demo
+  - bob user should have cluster administrator right
+  - john user can create new projects
+  - qwery user can not create projects
+  - natasha user can only view the resources of apollo and test project
+  - kubeadmin user should not exist (remove kubeadmin user)
+
+# oc new-project apollo --description="apollo project"
+# oc new-project apollo test
+# oc new-project apollo demo
+
+# oc adm policy add-cluster-role-to-user cluster-admin bob
+
+# oc adm policy add-cluster-role-to-user  self-provisioner john
+
+# oc adm policy remove-cluster-role-from-group self-provisioner system:authenticated:oauth (first check if user is not able to create project then run this command otherwise its not required) 
+
+Not this not require - (oc delete clusterrolebinding self-provisoners) -- ming the 's'
+
+# oc adm policy add-role-to-user view natasha -n apollo natatsha
+# oc adm policy add-role-to-user view natasha -n test natasha
+
+#Delete kubeadmin user end to the exam.
+# oc delete secete kubeadmin -n openshift-config
+
+
+Question 3: Managing group
+
+    - Create a groups with named site-users and guest-users
+    - add qwerty user in guest-user group
+    - add harry and susan users in site-users
+    - Give edit permission to sites-users groups on test project
+    - Give view permission to guest-users groups on demp project
+
+# oc adm groups new site-user
+# oc adm groups new guest-user
+
+# oc adm groups add-users guest-user qwerty
+# oc adm groups add-users site-user harry
+# oc adm groups add-users site-user susan
+
+# oc adm policy add-role-to-group edit site-user -n test
+# oc adm policy add-role-to-group view guest-user -n dump
+
+
+Question 4: Create resource quota for project rocky:
+  - pods = 3
+  - cpu = 2
+  - services = 6
+  - memory = 1Gi
+  - secrets = 6
+
+# oc adm create quota quotaname --hard=pod=3,cpu=2,services=6,memory=1Gi,secrets=6 -n rocky
+# oc describe quota -n rocky   
+
+Question 5: Create LimitRange for project rocky
+  - Set the pod memory limit between 5Mi and 100Mi
+  - Set the conainter memory limit between 5Mi to 300Mi
+  - set the pod cpu limit between 5m and 300m
+  - set the container cpu limit between 5m and 300m
+  - set the container default limit for memory and cpu to 100Mi and 100m 
+
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: ex280-limitrange
+spec:
+  limits:
+    - type: Pod
+      max:
+        cpu: 300m
+        memory: 100Mi
+      min:
+        cpu: 3m
+        memory: 5Mi 
+    - type: Container
+      max:
+        cpu: 300m
+        memory: 100Mi
+      min:
+        cpu: 5m
+        memory: 5Mi
+      default:
+        cpu: 100m
+        memory: 100Mi       
+---
+
+# oc create -f limitrance.yml -n rocky
+# oc describe limitrange -n rocky
+
+
+Question 6: Scale application manually
+  - scale the single-pod replics to 6 under the project world and make sure all pods should run sucessfully. 
+
+# oc scale --replicas=6 deploy deployname
+
+Question 7: Autoscale of Pods in scaling project
+  - minimum replicas=2, maximum replicas=9 and cpu percentage=60%
+  - Default request for container memory should 100Mi and cpu 50m 
+
+# oc set resources deployment deploymentname --limits=cpu=100m --requests=cpu=25m
+# oc autoscale dc/hello --min=3 --max=6 --cpu-percent=60
+# oc get hpa  
+
+Question 8: Create secret with name ex280-secure in secure project
+  - The key name should be myuser
+  - The value of key should be asdf234234=
+
+# oc project q8
+# oc create  secret generic ex280-secret --from-literal=password=redhat
+
+Question 9: Use secret in secret project
+  - There is one pod already exists.
+  - It should use ex280-secure secrets
+  - Application should produce output
+
+# oc project q9
+# oc set env deployment/mysql MYSQL_ROOT_PASSWORD --from=secret/ex280-secret   - In Exam use dc instead of deployment
+# oc edit deployment mysql - Change MY_ROOT_PASSWORDPASSWORD to  MY_ROOT_PASSWORD
+  
+Question 10: Create secure route in quart project
+  - One application is already running named with hello based on http
+  - It should run on https with self-sigined certificate
+  - It should use '/CN=quart.apps.domain3.example.com'
+  - It should run on https with following url https://quart.apps.domain3.example.com
+  - Application should produce the output 
+
+# oc new-app --name=hello --docker-image=docker.io/ramprakashupadhyay123/opesnhift -lab
+# openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:4096 -keyout private.key -out certificate.crt
+
+# oc delete route route-name
+# oc create route edge  --service=hello --hostname=hello.example.com --cert=certificate.crt  --key=private.key
+# oc get  route
+
+open URL in web browser with https://demo.apps.example.com    
+
+Question 11: Create service account(user) in project1:
+  - Service account (user) should be project-sa
+  - Service account should be associated with anyuid SCC
+
+# oc create sa service-accont-name
+# oc adm polciy add-ssc-to-user anyuid -z service-accont-name
+
+Question 12: Deploy application in the project project1
+  - There is one pod already running and,
+  - Application should produce output
+
+# oc get deploy or # oc get dc
+# oc edit deploy deploy-name or oc edit dc dc-name
+
+Add serviceAccountName in yaml in container section
+
+spec:
+  serviceAccountName: userroot
+  container:
+    --image=quay.io/jhksdkl
+
+# oc get deploy
+all pods should be runing now.
+
+# oc get pod      - It should show in running state   
+# oc get pod --show-labels  [determine the pod label which will use in service ]
+# oc get svc
+# oc describe service q8-qpp    - You will see there is Endpoints: <none>
+# oc describe route routename
+# oc edit service q8-app 
+
+
+If they application should runnning on web browser.
+# oc delete route routename
+# oc expose service servicename --hostname=app.ocp4.example.com  
+
+Question 13: Deploy application in the project project2
+  - There is one pod already running and,
+  - Application should produce output
+
+We have make workder nodes to untaint
+
+# oc get pods
+# oc describe pod podname
+# oc describe node | grep i taint
+
+# oc adm taint nodes worker01 label:NoSchedule-
+# oc adm taint nodes worker02 label:NoSchedule-
+
+# oc get pods
+# oc get svc
+# oc get route
+  or
+# oc edit node worker2   (delete 4 lines starting from taint)
+
+Open application in web oc edit node worker2   (delete 4 lines starting from taint)and that should be in running state.
+
+Question 14: Deploy application in the project project3
+  - There is one pod already running and,
+  - Application should produce output
+
+# oc describe pods pod-name
+Get the selector name from describe details
+
+# oc label node master01 disk=ssd  
+
+---
+# oc get events --> 0/6 nodes available, NodeSelector not matched:
+# oc get node -L app
+# oc get node -l app=Track
+# oc get node -l app=track
+# oc edit dc/myapp (look for nodeSelector: app: Track)
+# label the worker nodes approprivately 
+# oc label nodes worker1 app=Track (error: workernode1 already have label track but it's not Track - mind the caps T)
+# oc label nodes worker1 app=Track --overwrite
+
+Question 15: Deploy application in the project project4
+  - There is one pod already running and,
+  - Application should produce output
+
+# oc get pods
+# oc describe pods podname
+
+Check the error there should be insufficient memory
+
+# oc edit deploy deploymentname 
+
+remove the complete resource section and save.
+
+spec:
+  container:
+  - image
+    resources:          1   remove
+      requests:         2   remove
+        memory: 80G     3   remove
+
+save and quit  
