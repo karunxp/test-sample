@@ -324,5 +324,58 @@ spec:
 
 save and quit       
 
+xxxxxxxxxxxxxxxx--------------------------------xxxxxxxxxxxxxxxxx----------------------------xxxxxxxxxxxxxxxxxx---------------------------
 
+Q16
+Misc:
+########
+After fixing the deploments with serviceAccounts, Secrets, taints, labels, NodeSelectors, compute resource (cpu) limits , POD will start RUNNING but in second question or second part of same question, we have to get the route working, below are some scenarios 
+Route issues:
+Issue-1). route is created but not working (curl cmd output not coming), fix it without adding removing or adding any configuration of application.
+Sol: #oc get events --> 0/6 nodes available, NodeSelector not matched:
+     # oc get node -L app
+     # oc get node -l app=Track
+     # oc get node -l app=track
+     #oc edit dc/myapp (look for nodeSelector: app: Track)
+	 #label the worker nodes approprivately 
+	 # oc label nodes worker1 app=Track (error: workernode1 already have label track but it's not Track - mind the caps T)
+	 #oc label nodes worker1 app=Track --overwrite
+Q17.
+Issue-2).. route is created but not working (curl cmd output not coming), fix it without adding removing or adding any configuration of application.
+  Sol:  route which is exosed, wont give curl output even after pod started running cos spelling (app instead of apps) so delete the route and re-create.
+	#oc delete route myapp
+	# oc expose service myapp 
+	
+Issue-3). route is created but not working (curl cmd output not coming), fix it without adding removing or adding any configuration of application.
+    # oc get events
+		--> been running for 600secs, not working -- 
+	# oc get pods
+		--> pods/myapp-deploy-1 error
+	#oc edit dc/myapp (here will notice memory: 80G) which is not available to it so make it 1G and pod will start running
+	
+Issue-4). route is created but not working (curl cmd output not coming), fix it without adding removing or adding any configuration of application.	
+   #oc get route
+    ROUTE NAME							PATH
+   # project-myapp-apps.example.com 	                                              /
+   # Above route is not working through curl and looks like it's for some path based routing 
+   # So leave above route intact and create new one
+   # oc get route
+   # oc describe route voyger - Endpoints is showing that means no problem at service side, problem is at
+                                                      Requested Host: correct this domain in ingress then it will work
+   # oc get ingress
+   # oc edit ingress voyger		- Edit the correct URL here which is showing in “oc get route” 
+While creating new route without deleting previous route then it is giving “already exists” error  
+
+
+Issue-4). route is created but not working (curl cmd output not coming), fix it without adding removing or adding any configuration of application.	
+# oc get pods --show-labels
+  # oranges
+# oc describe svc oranges
+ --> endpoints: -- (here, will notice that there are no endpoints/container ip(s))
+ # oc edit service oranges 
+ --> here selector:
+			app: orange (we have to add an 's' to correct the label)
+ # now if we do curl route (of the service oranges, will show sweet output)
+
+# oc delete secret/kubeadmin –n kube-system	- At the end run this command to delete kubeadmin 
 
