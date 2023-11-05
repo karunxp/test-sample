@@ -1,3 +1,50 @@
+1. 
+Openshift KubeConfig File
+
+workstation - /usr/local/etc/ocp.config
+
+default username
+student
+student
+
+oc login -u kubeadmin -p {password} https://api.ocp4.example.com:6443
+
+Two default user is already created
+user: admin 	pass: redhat
+user: developer pass: developer 
+
+oc login -u admin -p admin https://api.ocp4.example.com:6443
+
+2.
+ssh lab@utility; 
+
+cd /home/lab/ocp4/auth/
+
+kudeadmin-password
+kubeconfig-orig
+kubeconfig
+
+Copy kubeconfig to workstation server.
+export KUBECONFIG=$PWD/kubeconfig
+
+kubectl get nodes
+
+oc login -u kubeadmin -p {password} https://api.ocp4.example.com:6443
+
+copy kubeconfig file from uitility server to workstation
+scp lab@utility:/home/lab/ocp4/auth/kubeconfig .
+
+export KUBECONFIG=$PWD/kubeconfig
+
+3.
+Login to any openshift master nodes
+
+workstation -> utility -> master01,02,03
+
+ssh lab@utility -> ssh -i ~/.ssh/lab_rsa core@master01.ocp4.example.com
+
+---------********-------********------------*******--------------***********------------
+
 Question 1: Manage Identity providers
 
   - create user bob with password indionce
@@ -27,9 +74,9 @@ spec:
   identityProviders:
   - htpasswd:
       fileData:
-        name: super-secret
+        name: htpass-idp-ex280
     mappingMethod: claim
-    name: ex280-provider
+    name: htpass-ex280
     type: HTPasswd  
 
 # oc replace -f oauth.yaml
@@ -149,7 +196,7 @@ Question 8: Create secret with name ex280-secure in secure project
   - The value of key should be asdf234234=
 
 # oc project q8
-# oc create  secret generic ex280-secret --from-literal=password=redhat
+# oc create  secret generic magic --from-literal=Decoder_Ring=ASDA142hfh-gfrhhueo-erfdk345v
 
 Question 9: Use secret in secret project
   - There is one pod already exists.
@@ -180,7 +227,7 @@ Question 10: Create secure route in quart project
 open URL in web browser with https://demo.apps.example.com    
 
 Question 11: Create service account(user) in project1:
-  - Service account (user) should be project-sa
+  - Service account (user) should be ex-280-sa
   - Service account should be associated with anyuid SCC
 
 # oc create sa service-accont-name
@@ -276,3 +323,6 @@ spec:
         memory: 80G     3   remove
 
 save and quit       
+
+
+
