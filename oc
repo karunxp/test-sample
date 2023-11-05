@@ -71,12 +71,12 @@ metadata:
   name: cluster
 spec:
   identityProviders:
-  - htpasswd:
-      fileData:
-        name: htpass-idp-ex280
-    mappingMethod: claim
-    name: htpass-ex280
-    type: HTPasswd  
+    - htpasswd:
+        fileData:
+          name: htpass-idp-ex280
+      mappingMethod: claim
+      name: htpass-ex280
+      type: HTPasswd  
 
 # oc replace -f oauth.yaml
 
